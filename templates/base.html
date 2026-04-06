@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bloom & Petal{% endblock %} — Магазин цветов с предзаказом</title>
+    <link rel="stylesheet" href="{% static 'catalog/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="{% url 'catalog:product_list' %}" class="logo">Bloom <span>&</span> Petal</a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="{% url 'catalog:product_list' %}">Каталог</a></li>
+                    <li><a href="{% url 'catalog:delivery_info' %}">Доставка</a></li>
+                    <li><a href="{% url 'catalog:contacts' %}">Контакты</a></li>
+                </ul>
+            </nav>
+            <a href="{% url 'catalog:cart_detail' %}" class="cart-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span class="cart-count">{{ cart|length }}</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Bloom & Petal — Магазин цветов с предзаказом © 2024</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ оформлен{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="success-page">
+        <div class="success-icon">✨</div>
+        <h2>Предзаказ принят!</h2>
+        
+        {% if order %}
+        <p class="order-number">Номер вашего заказа: <strong>#{{ order.id }}</strong></p>
+        {% endif %}
+        
+        <p class="success-message">
+            Спасибо за заказ! Мы свяжемся с вами в ближайшее время для подтверждения.<br>
+            Доставка запланирована на {% if order %}{{ order.delivery_date|date:"d.m.Y" }}{% endif %}.
+        </p>
+        
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-primary" style="margin-top: 2rem;">
+            Вернуться в каталог
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <h1>Букеты с душой</h1>
+    <p>Свежие цветы по предзаказу. Собираем с любовью за 24 часа. Бесплатная доставка от 3000 ₽</p>
+</section>
+
+<div class="container">
+    <h2 class="section-title">Наши букеты</h2>
+    
+    {% if products %}
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <a href="{{ product.get_absolute_url }}">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                {% else %}
+                <div class="product-image-placeholder">
+                    <span>Нет изображения</span>
+                </div>
+                {% endif %}
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-price-row">
+                        <span class="product-price">
+                            {% if product.get_min_price %}
+                                {{ product.get_min_price|floatformat:0 }} ₽ <span>от</span>
+                            {% else %}
+                                Нет в наличии
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-catalog">
+        <p>В каталоге пока нет товаров.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

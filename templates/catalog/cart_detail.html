@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title">Ваша корзина</h2>
+    
+    {% if cart %}
+    <div class="cart-container">
+        <div class="cart-items-list">
+            {% for item in cart %}
+            <div class="cart-item">
+                {% if item.product.image %}
+                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-image">
+                {% else %}
+                <div class="cart-item-image-placeholder"></div>
+                {% endif %}
+                
+                <div class="cart-item-details">
+                    <div class="cart-item-name">{{ item.product.name }}</div>
+                    <div class="cart-item-variant">Размер: {{ item.variant.get_size_display }}</div>
+                    <div class="cart-item-price">{{ item.total_price|floatformat:0 }} ₽</div>
+                    
+                    <div class="quantity-controls">
+                        <form method="post" action="{% url 'catalog:cart_update' item.variant.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ item.quantity|add:-1 }}">
+                            <button type="submit" class="quantity-btn">−</button>
+                        </form>
+                        
+                        <span>{{ item.quantity }}</span>
+                        
+                        <form method="post" action="{% url 'catalog:cart_update' item.variant.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ item.quantity|add:1 }}">
+                            <button type="submit" class="quantity-btn">+</button>
+                        </form>
+                    </div>
+                    
+                    <form method="post" action="{% url 'catalog:cart_remove' item.variant.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="remove-item">Удалить</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="cart-summary-box">
+            <h3>Сумма заказа</h3>
+            
+            <div class="cart-summary-row">
+                <span>Товары:</span>
+                <span>{{ cart.get_total_price|floatformat:0 }} ₽</span>
+            </div>
+            
+            <div class="cart-summary-row">
+                <span>Доставка:</span>
+                <span>
+                    {% if cart.get_delivery_cost == 0 %}
+                        Бесплатно
+                    {% else %}
+                        {{ cart.get_delivery_cost|floatformat:0 }} ₽
+                    {% endif %}
+                </span>
+            </div>
+            
+            {% if cart.get_delivery_cost == 0 %}
+            <div class="free-delivery-note">
+                📦 У вас бесплатная доставка!
+            </div>
+            {% else %}
+            <div class="delivery-hint">
+                До бесплатной доставки осталось {{ 3000|add:cart.get_total_price|floatformat:0 }} ₽
+            </div>
+            {% endif %}
+            
+            <div class="cart-summary-row total">
+                <span>Итого:</span>
+                <span>{{ cart.get_final_total|floatformat:0 }} ₽</span>
+            </div>
+            
+            <a href="{% url 'catalog:order_create' %}" class="btn btn-primary btn-full" style="margin-top: 1rem;">
+                Оформить предзаказ
+            </a>
+            
+            <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary btn-full" style="margin-top: 0.5rem;">
+                Продолжить покупки
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-cart">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <p>Ваша корзина пуста</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Добавьте букеты из каталога</p>
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-primary" style="margin-top: 2rem;">
+            Перейти в каталог
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

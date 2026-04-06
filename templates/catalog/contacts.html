@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Контакты{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title">Контакты</h2>
+    
+    <div class="info-page">
+        <div class="info-icon">💐</div>
+        
+        <div class="contacts-list">
+            <div class="contact-item">
+                <span class="contact-label">Телефон:</span>
+                <a href="tel:+79991234567" class="contact-value">+7 (999) 123-45-67</a>
+            </div>
+            
+            <div class="contact-item">
+                <span class="contact-label">Email:</span>
+                <a href="mailto:hello@bloompetal.ru" class="contact-value">hello@bloompetal.ru</a>
+            </div>
+            
+            <div class="contact-item">
+                <span class="contact-label">Адрес:</span>
+                <span class="contact-value">г. Москва, ул. Цветочная, 15</span>
+            </div>
+            
+            <div class="contact-item">
+                <span class="contact-label">Режим работы:</span>
+                <span class="contact-value">Ежедневно с 9:00 до 21:00</span>
+            </div>
+        </div>
+        
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-primary" style="margin-top: 2rem;">
+            Перейти в каталог
+        </a>
+    </div>
+</div>
+{% endblock %}

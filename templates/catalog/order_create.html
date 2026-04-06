@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление предзаказа{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title">Оформление предзаказа</h2>
+    
+    <div class="checkout-grid">
+        <div class="checkout-form-section">
+            <form method="post" class="checkout-form">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                        <span class="error">{{ form.first_name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <span class="error">{{ form.phone.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <span class="error">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.delivery_date.id_for_label }}">{{ form.delivery_date.label }}</label>
+                    {{ form.delivery_date }}
+                    {% if form.delivery_date.errors %}
+                    <span class="error">{{ form.delivery_date.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                    <span class="error">{{ form.address.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.comment.id_for_label }}">{{ form.comment.label }}</label>
+                    {{ form.comment }}
+                    {% if form.comment.errors %}
+                    <span class="error">{{ form.comment.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Подтвердить предзаказ</button>
+            </form>
+        </div>
+        
+        <div class="order-summary">
+            <h3>Ваш заказ</h3>
+            
+            <div class="order-items">
+                {% for item in cart %}
+                <div class="order-item">
+                    <span>{{ item.product.name }} ({{ item.variant.get_size_display }}) x {{ item.quantity }}</span>
+                    <span>{{ item.total_price|floatformat:0 }} ₽</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="order-totals">
+                <div class="summary-row">
+                    <span>Товары:</span>
+                    <span>{{ cart.get_total_price|floatformat:0 }} ₽</span>
+                </div>
+                <div class="summary-row">
+                    <span>Доставка:</span>
+                    <span>
+                        {% if cart.get_delivery_cost == 0 %}
+                            Бесплатно
+                        {% else %}
+                            {{ cart.get_delivery_cost|floatformat:0 }} ₽
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="summary-row total">
+                    <span>Итого:</span>
+                    <span>{{ cart.get_final_total|floatformat:0 }} ₽</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

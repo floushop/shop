@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Условия доставки{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title">Условия доставки</h2>
+    
+    <div class="info-page">
+        <div class="info-icon">🚚</div>
+        <h3>Бесплатная доставка от 3000 ₽</h3>
+        <p class="info-text">
+            При заказе на сумму менее 3000 ₽ стоимость доставки составляет 500 ₽.<br>
+            Доставка осуществляется на следующий день после оформления предзаказа.
+        </p>
+        
+        <div class="delivery-details">
+            <div class="detail-item">
+                <span class="detail-icon">📅</span>
+                <h4>Сроки доставки</h4>
+                <p>На следующий день после оформления предзаказа</p>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-icon">💰</span>
+                <h4>Стоимость</h4>
+                <p>Бесплатно от 3000 ₽, иначе 500 ₽</p>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-icon">📍</span>
+                <h4>Зона доставки</h4>
+                <p>В пределах города и ближайших пригородов</p>
+            </div>
+        </div>
+        
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-primary" style="margin-top: 2rem;">
+            Перейти в каталог
+        </a>
+    </div>
+</div>
+{% endblock %}
