@@ -286,6 +286,28 @@ class ProductAdmin(admin.ModelAdmin):
                     defaults={'slug': cat_name.lower().replace(' ', '-')[:100]}
                 )
 
+            # 5.5 Цвет:
+            color_raw = row.get('color') or row.get('цвет') or ''
+            color_raw = color_raw.strip().lower()
+            color = 'mixed'
+            if 'красн' in color_raw or 'red' in color_raw:
+                color = 'red'
+            elif 'розов' in color_raw or 'pink' in color_raw:
+                color = 'pink'
+            elif 'бел' in color_raw or 'white' in color_raw:
+                color = 'white'
+            elif 'желт' in color_raw or 'yellow' in color_raw:
+                color = 'yellow'
+
+            # 5.6 Размер:
+            size_raw = row.get('size') or row.get('размер') or row.get('размер варианта') or 'M'
+            size_raw = size_raw.strip().lower()
+            size = 'M'
+            if 'малый' in size_raw or 'small' in size_raw or size_raw == 's':
+                size = 'S'
+            elif 'большой' in size_raw or 'large' in size_raw or size_raw == 'l':
+                size = 'L'
+
             # 6. Признак активности
             is_active_raw = row.get('is_active') or row.get('активен') or '1'
             is_active = is_active_raw.lower() not in ('0', 'false', 'нет', 'no', '')
@@ -303,18 +325,18 @@ class ProductAdmin(admin.ModelAdmin):
                 # Обновляем существующий
                 product.name = name
                 product.is_active = is_active
+                if color_raw:
+                    product.color = color
                 if category:
                     product.category = category
                 product.save()
-                # Обновляем или создаём дефолтный вариант (размер M)
-                variant, _ = ProductVariant.objects.get_or_create(
+                # Обновляем или создаём вариант для указанного размера
+                variant, created_var = ProductVariant.objects.get_or_create(
                     product=product,
-                    size='M',
+                    size=size,
                     defaults={'price': price, 'stock_quantity': stock}
                 )
-                if _:
-                    pass  # только что создан
-                else:
+                if not created_var:
                     variant.price = price
                     variant.stock_quantity = stock
                     variant.save()
@@ -325,10 +347,11 @@ class ProductAdmin(admin.ModelAdmin):
                     name=name,
                     is_active=is_active,
                     category=category,
+                    color=color if color_raw else 'mixed',
                 )
                 ProductVariant.objects.create(
                     product=product,
-                    size='M',
+                    size=size,
                     price=price,
                     stock_quantity=stock,
                 )
