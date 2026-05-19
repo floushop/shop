@@ -1,6 +1,3 @@
-"""
-URL-конфигурация для приложения Catalog.
-"""
 
 from django.urls import path
 from . import views
@@ -11,6 +8,7 @@ urlpatterns = [
     path('', views.ProductListView.as_view(), name='product_list'),
     
     path('product/<int:pk>/', views.ProductDetailView.as_view(), name='product_detail'),
+    path('autocomplete/', views.ProductAutocompleteView.as_view(), name='product_autocomplete'),
     
     path('cart/', views.CartDetailView.as_view(), name='cart_detail'),
     path('cart/add/<int:variant_id>/', views.CartAddView.as_view(), name='cart_add'),
@@ -22,4 +20,5 @@ urlpatterns = [
     
     path('delivery/', views.DeliveryInfoView.as_view(), name='delivery_info'),
     path('contacts/', views.ContactsView.as_view(), name='contacts'),
+    path('register/', views.RegisterView.as_view(), name='register'),
 ]

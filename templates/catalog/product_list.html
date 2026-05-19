@@ -10,41 +10,167 @@
 </section>
 
 <div class="container">
-    <h2 class="section-title">Наши букеты</h2>
-    
-    {% if products %}
-    <div class="product-grid">
-        {% for product in products %}
-        <div class="product-card">
-            <a href="{{ product.get_absolute_url }}">
-                {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
-                {% else %}
-                <div class="product-image-placeholder">
-                    <span>Нет изображения</span>
-                </div>
+    <div class="catalog-layout">
+        <!-- Sidebar Filters -->
+        <aside class="catalog-sidebar">
+            <form action="" method="get" id="filterForm">
+                <!-- Keep search query if present -->
+                {% if request.GET.q %}
+                <input type="hidden" name="q" value="{{ request.GET.q }}">
                 {% endif %}
-                <div class="product-info">
-                    <h3 class="product-name">{{ product.name }}</h3>
-                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
-                    <div class="product-price-row">
-                        <span class="product-price">
-                            {% if product.get_min_price %}
-                                {{ product.get_min_price|floatformat:0 }} ₽ <span>от</span>
-                            {% else %}
-                                Нет в наличии
+
+                <div class="filter-section">
+                    <h4>Категории</h4>
+                    <ul class="filter-categories">
+                        <li>
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}" {% if not current_filters.category %}class="active"{% endif %}>Все букеты</a>
+                        </li>
+                        {% for cat in categories %}
+                        <li>
+                            <a href="?category={{ cat.slug }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if current_filters.category == cat.slug %}class="active"{% endif %}>
+                                {{ cat.name }}
+                            </a>
+                            {% if cat.children.all %}
+                            <ul class="filter-subcategories">
+                                {% for sub in cat.children.all %}
+                                <li>
+                                    <a href="?category={{ sub.slug }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if current_filters.category == sub.slug %}class="active"{% endif %}>
+                                        — {{ sub.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
                             {% endif %}
-                        </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Цена (₽)</h4>
+                    <div class="price-inputs">
+                        <input type="number" name="min_price" placeholder="от" value="{{ current_filters.min_price }}">
+                        <input type="number" name="max_price" placeholder="до" value="{{ current_filters.max_price }}">
                     </div>
                 </div>
-            </a>
-        </div>
-        {% endfor %}
+
+                <div class="filter-section">
+                    <h4>Наличие и новинки</h4>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" name="in_stock" value="1" {% if current_filters.in_stock %}checked{% endif %}>
+                        В наличии
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" name="is_new" value="1" {% if current_filters.is_new %}checked{% endif %}>
+                        Новинки
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-apply-filters">Применить</button>
+                <a href="{% url 'catalog:product_list' %}" class="btn-reset-filters">Сбросить</a>
+            </form>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="catalog-main">
+            <div class="catalog-header">
+                <h2 class="section-title">
+                    {% if request.GET.q %}
+                        Результаты поиска: «{{ request.GET.q }}»
+                    {% elif current_filters.category %}
+                        Букеты в категории
+                    {% else %}
+                        Наши букеты
+                    {% endif %}
+                </h2>
+                
+                <div class="catalog-sorting">
+                    <label for="sortSelect">Сортировка:</label>
+                    <select id="sortSelect" onchange="location.href=this.value;">
+                        <option value="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>По новизне</option>
+                        <option value="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=price_asc" {% if current_filters.sort == 'price_asc' %}selected{% endif %}>Сначала дешевле</option>
+                        <option value="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}sort=price_desc" {% if current_filters.sort == 'price_desc' %}selected{% endif %}>Сначала дороже</option>
+                    </select>
+                </div>
+            </div>
+            
+            {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <a href="{{ product.get_absolute_url }}">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                        <div class="product-image-placeholder">
+                            <span>Нет изображения</span>
+                        </div>
+                        {% endif %}
+                        <div class="product-info">
+                            <h3 class="product-name">
+                                {% if request.GET.q %}
+                                    {# Простая подсветка через шаблон невозможна без фильтра, но можно сделать JS-ом #}
+                                    <span class="highlight-target">{{ product.name }}</span>
+                                {% else %}
+                                    {{ product.name }}
+                                {% endif %}
+                            </h3>
+                            <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                            <div class="product-price-row">
+                                <span class="product-price">
+                                    {% if product.get_min_price %}
+                                        <span>от</span> {{ product.get_min_price|floatformat:0 }} ₽
+                                    {% else %}
+                                        Нет в наличии
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-catalog">
+                <p>К сожалению, ничего не найдено по вашему запросу.</p>
+                {% if similar_products %}
+                    <h3 style="margin-top: 40px;">Возможно, вам понравится:</h3>
+                    <div class="product-grid">
+                        {% for product in similar_products %}
+                        <div class="product-card">
+                            <a href="{{ product.get_absolute_url }}">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                                {% endif %}
+                                <div class="product-info">
+                                    <h3 class="product-name">{{ product.name }}</h3>
+                                    <span class="product-price">от {{ product.get_min_price|floatformat:0 }} ₽</span>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </main>
     </div>
-    {% else %}
-    <div class="empty-catalog">
-        <p>В каталоге пока нет товаров.</p>
-    </div>
-    {% endif %}
 </div>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Подсветка найденных слов
+    document.addEventListener('DOMContentLoaded', function() {
+        const query = new URLSearchParams(window.location.search).get('q');
+        if (query && query.length > 1) {
+            const targets = document.querySelectorAll('.highlight-target');
+            const regex = new RegExp(`(${query})`, 'gi');
+            targets.forEach(target => {
+                target.innerHTML = target.innerHTML.replace(regex, '<mark>$1</mark>');
+            });
+        }
+    });
+</script>
+{% endblock %}
 {% endblock %}

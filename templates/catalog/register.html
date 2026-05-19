@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 300px);
+        padding: 3rem 1rem;
+    }
+    .auth-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 3rem;
+        width: 100%;
+        max-width: 440px;
+        animation: authFadeIn 0.5s ease forwards;
+    }
+    @keyframes authFadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .auth-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    .auth-title {
+        font-size: 1.8rem;
+        font-weight: 300;
+        color: #3d3d3d;
+        margin-bottom: 0.4rem;
+    }
+    .auth-subtitle {
+        color: #777;
+        font-size: 0.95rem;
+    }
+    .auth-field {
+        margin-bottom: 1.25rem;
+    }
+    .auth-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #3d3d3d;
+        font-size: 0.9rem;
+    }
+    .auth-field input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e8d5d5;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        color: #3d3d3d;
+        background: #fff;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        box-sizing: border-box;
+    }
+    .auth-field input:focus {
+        outline: none;
+        border-color: #d4a5a5;
+        box-shadow: 0 0 0 3px rgba(212, 165, 165, 0.15);
+    }
+    .auth-errors {
+        background: #ffebee;
+        color: #d32f2f;
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        border-left: 3px solid #d32f2f;
+    }
+    .auth-errors p { margin: 0; }
+    .auth-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: #d4a5a5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+        font-family: inherit;
+    }
+    .auth-btn:hover {
+        background: #b88a8a;
+        transform: translateY(-2px);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e8d5d5;
+    }
+    .auth-footer p {
+        color: #777;
+        font-size: 0.9rem;
+    }
+    .auth-footer a {
+        color: #b88a8a;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    .field-errors {
+        list-style: none;
+        padding: 0;
+        margin: 0.35rem 0 0;
+    }
+    .field-errors li {
+        color: #d32f2f;
+        font-size: 0.82rem;
+    }
+    .field-help {
+        color: #999;
+        font-size: 0.78rem;
+        margin: 0.35rem 0 0;
+        line-height: 1.4;
+    }
+    .password-wrapper {
+        position: relative;
+        display: block;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s;
+    }
+    .password-toggle:hover {
+        color: #d4a5a5;
+    }
+    .auth-field input.has-toggle {
+        padding-right: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">🌷</div>
+            <h2 class="auth-title">Добро пожаловать!</h2>
+            <p class="auth-subtitle">Создайте аккаунт в Bloom &amp; Petal</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="auth-errors">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="auth-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+
+                {% if field.errors %}
+                <ul class="field-errors">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="auth-btn">Зарегистрироваться</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passInputs = document.querySelectorAll('.auth-field input[type="password"]');
+    
+    passInputs.forEach(input => {
+        // Добавляем класс для отступа
+        input.classList.add('has-toggle');
+        
+        // Оборачиваем input в div
+        const wrapper = document.createElement('div');
+        wrapper.className = 'password-wrapper';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+        
+        // Создаем иконку глазика
+        const icon = document.createElement('span');
+        icon.className = 'password-toggle';
+        
+        const eyeSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const eyeOffSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+        
+        icon.innerHTML = eyeSvg;
+        wrapper.appendChild(icon);
+        
+        // Логика переключения
+        icon.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = eyeOffSvg;
+            } else {
+                input.type = 'password';
+                icon.innerHTML = eyeSvg;
+            }
+        });
+    });
+
+    // Валидация совпадения паролей
+    if (passInputs.length >= 2) {
+        // Мы предполагаем, что на странице регистрации последние два поля пароля это сам пароль и подтверждение
+        const pass1 = passInputs[passInputs.length - 2];
+        const pass2 = passInputs[passInputs.length - 1];
+        
+        // Создаем элемент с текстом ошибки
+        const errorMsg = document.createElement('p');
+        errorMsg.style.cssText = 'color: #d32f2f; font-size: 0.85rem; margin-top: 0.5rem; display: none;';
+        errorMsg.textContent = 'Пароли не совпадают!';
+        
+        // Добавляем сообщение под вторым паролем (после wrapper'а)
+        pass2.closest('.password-wrapper').insertAdjacentElement('afterend', errorMsg);
+
+        function checkPasswords() {
+            if (pass1.value && pass2.value) {
+                if (pass1.value !== pass2.value) {
+                    pass2.style.borderColor = '#d32f2f';
+                    pass2.style.backgroundColor = '#fffafa';
+                    errorMsg.style.display = 'block';
+                } else {
+                    pass2.style.borderColor = '#388e3c';
+                    pass2.style.backgroundColor = '#f1fdf2';
+                    errorMsg.style.display = 'none';
+                }
+            } else {
+                pass2.style.borderColor = '';
+                pass2.style.backgroundColor = '';
+                errorMsg.style.display = 'none';
+            }
+        }
+
+        pass1.addEventListener('input', checkPasswords);
+        pass2.addEventListener('input', checkPasswords);
+    }
+});
+</script>
+{% endblock %}

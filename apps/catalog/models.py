@@ -1,19 +1,41 @@
-"""
-Модели приложения Catalog.
-Здесь определены сущности для товаров и их вариантов (размеров).
-Поскольку мы работаем по предзаказу, мы не отслеживаем точные остатки (stock), 
-а используем флаг `is_available` для управления доступностью.
-"""
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from django.conf import settings
+from django.utils.text import slugify
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, verbose_name=_("Название"))
+    slug = models.SlugField(max_length=100, unique=True, verbose_name=_("Slug"))
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='children',
+        verbose_name=_("Родительская категория")
+    )
+
+    class Meta:
+        verbose_name = _("Категория")
+        verbose_name_plural = _("Категории")
+        ordering = ['name']
+
+    def __str__(self):
+        full_path = [self.name]
+        k = self.parent
+        while k is not None:
+            full_path.append(k.name)
+            k = k.parent
+        return ' -> '.join(full_path[::-1])
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 class Product(models.Model):
-    """
-    Базовая модель товара (Букета/Композиции).
-    Содержит общую информацию, которая не зависит от конкретного размера.
-    """
     name = models.CharField(
         max_length=255, 
         verbose_name=_("Название букета")
@@ -21,6 +43,30 @@ class Product(models.Model):
     description = models.TextField(
         blank=True, 
         verbose_name=_("Описание")
+    )
+    category = models.ForeignKey(
+        'Category',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='products',
+        verbose_name=_("Категория")
+    )
+    color = models.CharField(
+        max_length=50,
+        choices=[
+            ('red', 'Красный'),
+            ('pink', 'Розовый'),
+            ('white', 'Белый'),
+            ('yellow', 'Желтый'),
+            ('mixed', 'Микс'),
+        ],
+        default='mixed',
+        verbose_name=_("Основной цвет")
+    )
+    is_new = models.BooleanField(
+        default=False,
+        verbose_name=_("Новинка")
     )
     image = models.ImageField(
         upload_to='products/',
@@ -54,17 +100,12 @@ class Product(models.Model):
         return reverse('catalog:product_detail', kwargs={'pk': self.pk})
     
     def get_min_price(self):
-        """Возвращает минимальную цену среди доступных вариантов."""
         available_variants = self.variants.filter(is_available=True)
         if available_variants.exists():
             return min(variant.price for variant in available_variants)
         return None
 
 class ProductVariant(models.Model):
-    """
-    Модель вариации товара.
-    Позволяет задавать разные цены для разных размеров одного и того же букета.
-    """
     SIZE_CHOICES = (
         ('S', 'Малый (Small)'),
         ('M', 'Средний (Medium)'),
@@ -87,6 +128,15 @@ class ProductVariant(models.Model):
         decimal_places=2, 
         verbose_name=_("Цена")
     )
+    stock_quantity = models.IntegerField(
+        default=0,
+        verbose_name=_("Остаток на складе")
+    )
+    low_stock_threshold = models.IntegerField(
+        default=5,
+        verbose_name=_("Порог малого остатка"),
+        help_text=_("Если остаток меньше или равен этому значению, товар считается с малым остатком.")
+    )
     is_available = models.BooleanField(
         default=True, 
         verbose_name=_("Доступен для предзаказа"),
@@ -99,13 +149,17 @@ class ProductVariant(models.Model):
         unique_together = ('product', 'size')
         ordering = ["product", "size"]
 
+    def save(self, *args, **kwargs):
+        if self.stock_quantity > 0:
+            self.is_available = True
+        else:
+            self.is_available = False
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.product.name} - {self.get_size_display()} ({self.price} руб.)"
 
 class Order(models.Model):
-    """
-    Модель заказа (предзаказа).
-    """
     STATUS_CHOICES = (
         ('new', 'Новый'),
         ('confirmed', 'Подтверждён'),
@@ -114,6 +168,14 @@ class Order(models.Model):
         ('cancelled', 'Отменён'),
     )
     
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+        verbose_name=_("Клиент")
+    )
     first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
     phone = models.CharField(max_length=20, verbose_name=_("Телефон"))
     email = models.EmailField(blank=True, verbose_name=_("Email"))
@@ -123,6 +185,9 @@ class Order(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Дата обновления"))
+    is_paid = models.BooleanField(default=False, verbose_name=_("Оплачен"))
+    paid_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Дата и время оплаты"))
+    stock_deducted = models.BooleanField(default=False, verbose_name=_("Списано со склада"))
     
     status = models.CharField(
         max_length=20, 
@@ -148,13 +213,20 @@ class Order(models.Model):
         verbose_name_plural = _("Заказы")
         ordering = ["-created_at"]
 
+    def save(self, *args, **kwargs):
+        if self.status == 'completed' and not self.stock_deducted:
+            for item in self.items.all():
+                if item.product_variant:
+                    variant = item.product_variant
+                    variant.stock_quantity = max(0, variant.stock_quantity - item.quantity)
+                    variant.save() # Это также обновит флаг is_available
+            self.stock_deducted = True
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Заказ #{self.pk} - {self.first_name}"
 
 class OrderItem(models.Model):
-    """
-    Элемент заказа (конкретный товар и его количество).
-    """
     order = models.ForeignKey(
         Order, 
         related_name='items', 

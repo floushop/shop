@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 300px);
+        padding: 3rem 1rem;
+    }
+    .auth-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 3rem;
+        width: 100%;
+        max-width: 440px;
+        animation: authFadeIn 0.5s ease forwards;
+    }
+    @keyframes authFadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .auth-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    .auth-title {
+        font-size: 1.8rem;
+        font-weight: 300;
+        color: #3d3d3d;
+        margin-bottom: 0.4rem;
+    }
+    .auth-subtitle {
+        color: #777;
+        font-size: 0.95rem;
+    }
+    .auth-field {
+        margin-bottom: 1.25rem;
+    }
+    .auth-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #3d3d3d;
+        font-size: 0.9rem;
+    }
+    .auth-field input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e8d5d5;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        color: #3d3d3d;
+        background: #fff;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        box-sizing: border-box;
+    }
+    .auth-field input:focus {
+        outline: none;
+        border-color: #d4a5a5;
+        box-shadow: 0 0 0 3px rgba(212, 165, 165, 0.15);
+    }
+    .auth-errors {
+        background: #ffebee;
+        color: #d32f2f;
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        border-left: 3px solid #d32f2f;
+    }
+    .auth-errors p { margin: 0; }
+    .auth-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: #d4a5a5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+        font-family: inherit;
+    }
+    .auth-btn:hover {
+        background: #b88a8a;
+        transform: translateY(-2px);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e8d5d5;
+    }
+    .auth-footer p {
+        color: #777;
+        font-size: 0.9rem;
+    }
+    .auth-footer a {
+        color: #b88a8a;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    .field-errors {
+        list-style: none;
+        padding: 0;
+        margin: 0.35rem 0 0;
+    }
+    .field-errors li {
+        color: #d32f2f;
+        font-size: 0.82rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">🌸</div>
+            <h2 class="auth-title">С возвращением!</h2>
+            <p class="auth-subtitle">Войдите в аккаунт Bloom &amp; Petal</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="auth-errors">
+            <p>Неверное имя пользователя или пароль. Попробуйте ещё раз.</p>
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="auth-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <ul class="field-errors">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="auth-btn">Войти</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Ещё нет аккаунта? <a href="{% url 'catalog:register' %}">Зарегистрироваться</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,8 +4,9 @@
 
 {% block content %}
 <div class="container">
-    <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary" style="margin-bottom: 2rem; display: inline-block;">← Назад в каталог</a>
-    
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary"
+        style="margin-bottom: 2rem; display: inline-block;">← Назад в каталог</a>
+
     <div class="product-detail">
         {% if product.image %}
         <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-detail-image">
@@ -14,25 +15,21 @@
             <span>Нет изображения</span>
         </div>
         {% endif %}
-        
+
         <div class="product-detail-info">
             <h1>{{ product.name }}</h1>
             <p class="description">{{ product.description }}</p>
-            
-            {% with available_variants=product.variants.all %}
+
             {% if available_variants %}
-            <form method="post" action="{% url 'catalog:cart_add' available_variants.0.id %}">
+            <form method="post" id="addToCartForm" action="{% url 'catalog:cart_add' available_variants.0.id %}">
                 {% csrf_token %}
-                
+
                 <div style="margin: 2rem 0;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Выберите размер:</label>
                     <div class="size-selector">
-                        {% for variant in available_variants %}
+                        {% for variant in all_variants %}
                         <label class="size-radio">
-                            <input type="radio" name="variant_id" value="{{ variant.id }}" 
-                                   data-price="{{ variant.price }}"
-                                   {% if not variant.is_available %}disabled{% endif %}
-                                   {% if forloop.first and variant.is_available %}checked{% endif %}>
+                            <input type="radio" name="variant_id" value="{{ variant.id }}" data-price="{{ variant.price }}" {% if not variant.is_available %}disabled{% endif %} {% if forloop.first and variant.is_available %}checked{% endif %}>
                             <span class="size-btn {% if not variant.is_available %}disabled{% endif %}">
                                 {{ variant.get_size_display }}
                                 {% if not variant.is_available %}(нет){% endif %}
@@ -42,14 +39,14 @@
                         {% endfor %}
                     </div>
                 </div>
-                
-                <div class="price-display" id="priceDisplay">
-                    {{ available_variants.0.price|floatformat:0 }} ₽
+
+                <div class="price-display">
+                    от <span id="priceDisplay">{{ available_variants.0.price|floatformat:0 }}</span> ₽
                 </div>
-                
+
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="next" value="catalog:cart_detail">
-                
+
                 <button type="submit" class="btn btn-primary btn-full">
                     Добавить в корзину
                 </button>
@@ -57,8 +54,7 @@
             {% else %}
             <p class="out-of-stock">К сожалению, этот товар временно недоступен.</p>
             {% endif %}
-            {% endwith %}
-            
+
             <div class="delivery-info-box">
                 <p>
                     📅 Доставка на следующий день после предзаказа<br>
@@ -70,12 +66,14 @@
 </div>
 
 <script>
-// Обновление цены при выборе размера
-document.querySelectorAll('input[name="variant_id"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const price = this.getAttribute('data-price');
-        document.getElementById('priceDisplay').textContent = price + ' ₽';
+    document.querySelectorAll('input[name="variant_id"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            const price = this.getAttribute('data-price');
+            document.getElementById('priceDisplay').textContent = price;
+            // Обновляем action формы на выбранный вариант
+            const form = document.getElementById('addToCartForm');
+            form.action = '/cart/add/' + this.value + '/';
+        });
     });
-});
 </script>
 {% endblock %}

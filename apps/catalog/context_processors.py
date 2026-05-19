@@ -1,9 +1,6 @@
 from .cart import Cart
 
 class CartProxy:
-    """
-    Прокси-класс для корзины, чтобы избежать проблем с копированием контекста в Python 3.14
-    """
     def __init__(self, request):
         self._request = request
     

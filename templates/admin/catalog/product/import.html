@@ -1,0 +1,136 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div style="max-width:800px;">
+
+  <h1 style="margin-bottom:20px;">⬆ Импорт товаров</h1>
+
+  {# ── Ссылка назад ── #}
+  <p>
+    <a href="{% url 'admin:catalog_product_changelist' %}" style="color:#417690;">
+      ← Назад к списку товаров
+    </a>
+  </p>
+
+  {# ── Ошибка разбора файла ── #}
+  {% if error %}
+  <div style="background:#fff3cd;border:1px solid #ffc107;padding:12px 16px;border-radius:4px;margin-bottom:20px;">
+    <strong>⚠ Ошибка:</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {# ── Результат импорта ── #}
+  {% if result %}
+  <div style="background:#d4edda;border:1px solid #28a745;padding:16px;border-radius:4px;margin-bottom:20px;">
+    <h3 style="margin:0 0 8px;">✅ Импорт завершён</h3>
+    <table style="border-collapse:collapse;width:100%;font-size:14px;">
+      <tr>
+        <td style="padding:4px 12px 4px 0;"><strong>Всего строк в файле:</strong></td>
+        <td><strong>{{ result.total }}</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 12px 4px 0;color:#155724;">Создано новых товаров:</td>
+        <td style="color:#155724;"><strong>{{ result.created }}</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 12px 4px 0;color:#0c5460;">Обновлено существующих:</td>
+        <td style="color:#0c5460;"><strong>{{ result.updated }}</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 12px 4px 0;color:#721c24;">Строк с ошибками (пропущено):</td>
+        <td style="color:#721c24;"><strong>{{ result.errors|length }}</strong></td>
+      </tr>
+    </table>
+  </div>
+
+  {# ── Таблица ошибок ── #}
+  {% if result.errors %}
+  <div style="background:#f8d7da;border:1px solid #f5c6cb;padding:16px;border-radius:4px;margin-bottom:24px;">
+    <h3 style="margin:0 0 12px;color:#721c24;">❌ Строки с ошибками</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f5c6cb;">
+          <th style="padding:6px 10px;text-align:left;border:1px solid #f1b0b7;">Строка</th>
+          <th style="padding:6px 10px;text-align:left;border:1px solid #f1b0b7;">Описание ошибки</th>
+          <th style="padding:6px 10px;text-align:left;border:1px solid #f1b0b7;">Данные строки</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for err in result.errors %}
+        <tr style="background:#fff;">
+          <td style="padding:6px 10px;border:1px solid #f1b0b7;font-weight:bold;">{{ err.line }}</td>
+          <td style="padding:6px 10px;border:1px solid #f1b0b7;color:#721c24;">{{ err.reason }}</td>
+          <td style="padding:6px 10px;border:1px solid #f1b0b7;font-family:monospace;font-size:11px;word-break:break-all;">
+            {{ err.data }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ── Форма загрузки ── #}
+  <div style="background:#fff;border:1px solid #ddd;border-radius:4px;padding:24px;margin-bottom:24px;">
+    <h3 style="margin:0 0 16px;">Загрузить файл</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom:16px;">
+        <label for="import_file" style="display:block;font-weight:bold;margin-bottom:6px;">
+          Файл CSV или JSON:
+        </label>
+        <input type="file" id="import_file" name="import_file"
+               accept=".csv,.json"
+               style="padding:6px;border:1px solid #ccc;border-radius:3px;width:100%;box-sizing:border-box;">
+        <small style="color:#666;display:block;margin-top:4px;">
+          Поддерживаются форматы: <code>.csv</code> (разделитель «;» или «,») и <code>.json</code> (массив объектов).
+        </small>
+      </div>
+      <button type="submit" style="
+          background:#417690;color:#fff;border:none;
+          padding:10px 24px;border-radius:4px;
+          font-size:14px;cursor:pointer;">
+        ⬆ Импортировать
+      </button>
+    </form>
+  </div>
+
+  {# ── Инструкция ── #}
+  <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:20px;">
+    <h3 style="margin:0 0 12px;">📋 Инструкция по формату файла</h3>
+
+    <p><strong>Обязательные поля:</strong></p>
+    <ul>
+      <li><code>name</code> / <code>название</code> — название товара (непустое)</li>
+      <li><code>price</code> / <code>цена</code> — цена в рублях (число ≥ 0)</li>
+    </ul>
+
+    <p><strong>Необязательные поля:</strong></p>
+    <ul>
+      <li><code>id</code> — если указан и товар найден, он будет <em>обновлён</em>; иначе создаётся новый</li>
+      <li><code>stock</code> / <code>остаток на складе</code> — целое число ≥ 0 (по умолчанию 0)</li>
+      <li><code>category</code> / <code>категория</code> — название категории; если не найдена — создаётся автоматически</li>
+      <li><code>is_active</code> / <code>активен</code> — 1/0, true/false, да/нет (по умолчанию активен)</li>
+    </ul>
+
+    <p><strong>Пример CSV:</strong></p>
+    <pre style="background:#e9ecef;padding:10px;border-radius:3px;font-size:12px;overflow-x:auto;">id;name;price;stock;category;is_active
+1;Букет из роз;1500;10;Розы;1
+;Букет из тюльпанов;990;5;Тюльпаны;1
+42;Старый букет;2000;0;Розы;0</pre>
+
+    <p><strong>Пример JSON:</strong></p>
+    <pre style="background:#e9ecef;padding:10px;border-radius:3px;font-size:12px;overflow-x:auto;">[
+  {"id": 1, "name": "Букет из роз", "price": 1500, "stock": 10, "category": "Розы", "is_active": 1},
+  {"name": "Новый букет", "price": 990, "stock": 5, "category": "Тюльпаны", "is_active": 1}
+]</pre>
+
+    <p style="margin-bottom:0;color:#666;font-size:13px;">
+      ℹ️ Кодировка файла: <strong>UTF-8</strong>. При создании в Excel сохраняйте как «CSV UTF-8».
+    </p>
+  </div>
+
+</div>
+{% endblock %}

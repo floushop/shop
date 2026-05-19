@@ -1,6 +1,3 @@
-"""
-Формы для приложения Catalog.
-"""
 
 from django import forms
 from django.utils import timezone
@@ -8,9 +5,6 @@ from datetime import timedelta
 from .models import Order
 
 class OrderCreateForm(forms.ModelForm):
-    """
-    Форма для создания заказа (предзаказа).
-    """
     delivery_date = forms.DateField(
         widget=forms.DateInput(attrs={
             'type': 'date',
@@ -60,9 +54,6 @@ class OrderCreateForm(forms.ModelForm):
         self.fields['delivery_date'].widget.attrs['min'] = tomorrow.isoformat()
     
     def clean_delivery_date(self):
-        """
-        Проверка, что дата доставки не сегодня и не в прошлом.
-        """
         delivery_date = self.cleaned_data['delivery_date']
         today = timezone.now().date()
         
@@ -74,9 +65,6 @@ class OrderCreateForm(forms.ModelForm):
         return delivery_date
     
     def clean_phone(self):
-        """
-        Простая валидация телефона.
-        """
         phone = self.cleaned_data['phone']
         digits = ''.join(filter(str.isdigit, phone))
         
